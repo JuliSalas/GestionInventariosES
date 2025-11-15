@@ -1,105 +1,82 @@
 import java.util.Scanner;
 
 public class Main {
-    private static Scanner sc = new Scanner(System.in);
-    private static ListaProductos lista = new ListaProductos();
+
+    static Scanner sc = new Scanner(System.in);
+    static Tienda tienda = new Tienda();
 
     public static void main(String[] args) {
         menu();
     }
 
     public static void menu() {
-        int opcion;
-        do {
-            System.out.println("\n GESTIÓN DE VENTAS");
-            System.out.println("(1) Agregar producto al inicio");
-            System.out.println("(2) Agregar producto al final");
-            System.out.println("(3) Modificar producto");
-            System.out.println("(4) Agregar imagen a producto");
-            System.out.println("(5) Mostrar reporte");
-            System.out.println("(6) Salir");
-            System.out.print("Seleccione una opción: ");
-            opcion = leerEntero();
+        int op;
 
-            switch (opcion) {
-                case 1 -> agregarProducto(true);
-                case 2 -> agregarProducto(false);
-                case 3 -> modificarProducto();
-                case 4 -> agregarImagen();
-                case 5 -> lista.imprimirReporte();
-                case 6 -> System.out.println(" Se encuentra saliendo del sistema");
-                default -> System.out.println(" Opción no válida. Intente de nuevo");
+        do {
+            System.out.println("\n- MENU PRINCIPAL -");
+            System.out.println("1. Agregar producto al inventario");
+            System.out.println("2. Mostrar inventario");
+            System.out.println("3. Registrar cliente y llenar carrito");
+            System.out.println("4. Atender siguiente cliente");
+            System.out.println("5. Salir");
+            System.out.print("Seleccione opción: ");
+
+            op = Integer.parseInt(sc.nextLine());
+
+            switch (op) {
+                case 1 -> agregarProductoInventario();
+                case 2 -> tienda.getInventario().imprimirInventario();
+                case 3 -> registrarCliente();
+                case 4 -> tienda.atenderCliente();
+                case 5 -> System.out.println("Saliendo...");
+                default -> System.out.println("Opción inválida");
             }
-        } while (opcion != 6);
+
+        } while (op != 5);
     }
 
-    private static void agregarProducto(boolean alInicio) {
-        System.out.println("\nAgregar Producto ");
+    private static void agregarProductoInventario() {
         System.out.print("Nombre: ");
         String nombre = sc.nextLine();
         System.out.print("Precio: ");
-        double precio = leerDouble();
+        double precio = Double.parseDouble(sc.nextLine());
         System.out.print("Categoría: ");
         String categoria = sc.nextLine();
-        System.out.print("Fecha de vencimiento (o 'n/a'): ");
+        System.out.print("Fecha vencimiento: ");
         String fecha = sc.nextLine();
         System.out.print("Cantidad: ");
-        int cantidad = leerEntero();
+        int cantidad = Integer.parseInt(sc.nextLine());
 
-        Producto p = new Producto(nombre, precio, categoria, fecha, cantidad);
-        if (alInicio) lista.insertarInicio(p);
-        else lista.insertarFinal(p);
+        tienda.getInventario().insertar(new Producto(nombre, precio, categoria, fecha, cantidad));
     }
 
-    private static void modificarProducto() {
-        System.out.println("\nModificar Producto");
-        System.out.print("Nombre del producto a modificar: ");
+    private static void registrarCliente() {
+        System.out.print("Nombre del cliente: ");
         String nombre = sc.nextLine();
+        System.out.print("Prioridad (1=básico, 2=afiliado, 3=premium): ");
+        int prioridad = Integer.parseInt(sc.nextLine());
 
-        System.out.println("Ingrese los nuevos datos:");
-        System.out.print("Nuevo nombre: ");
-        String nuevoNombre = sc.nextLine();
-        System.out.print("Nuevo precio: ");
-        double precio = leerDouble();
-        System.out.print("Nueva categoría: ");
-        String categoria = sc.nextLine();
-        System.out.print("Nueva fecha de vencimiento: ");
-        String fecha = sc.nextLine();
-        System.out.print("Nueva cantidad: ");
-        int cantidad = leerEntero();
+        Cliente c = new Cliente(nombre, prioridad);
 
-        Producto nuevo = new Producto(nuevoNombre, precio, categoria, fecha, cantidad);
-        lista.modificarProducto(nombre, nuevo);
-    }
+        System.out.println("¿Cuántos productos desea agregar al carrito?");
+        int n = Integer.parseInt(sc.nextLine());
 
-    private static void agregarImagen() {
-        System.out.println("\nAgregar Imagen");
-        System.out.print("Nombre del producto: ");
-        String nombre = sc.nextLine();
-        System.out.print("Ruta de la imagen (ejemplo: src/img/producto1.jpg): ");
-        String ruta = sc.nextLine();
-        lista.agregarImagen(nombre, ruta);
-    }
+        for (int i = 0; i < n; i++) {
+            System.out.print("Nombre del producto: ");
+            String nom = sc.nextLine();
 
-    private static int leerEntero() {
-        while (true) {
-            try {
-                int valor = Integer.parseInt(sc.nextLine());
-                return valor;
-            } catch (NumberFormatException e) {
-                System.out.print("Ingrese un número entero válido: ");
+            Producto p = tienda.getInventario().buscar(nom);
+            if (p != null) {
+                System.out.print("Cantidad: ");
+                int cant = Integer.parseInt(sc.nextLine());
+
+                Producto copia = new Producto(p.getNombre(), p.getPrecio(), p.getCategoria(), p.getFechaVencimiento(), cant);
+                c.getCarrito().insertarFinal(copia);
+            } else {
+                System.out.println("Producto no encontrado en inventario.");
             }
         }
-    }
 
-    private static double leerDouble() {
-        while (true) {
-            try {
-                double valor = Double.parseDouble(sc.nextLine());
-                return valor;
-            } catch (NumberFormatException e) {
-                System.out.print(" Ingrese un número válido: ");
-            }
-        }
+        tienda.agregarCliente(c);
     }
 }
